@@ -3,11 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
+
 from .routers import extract, history, export
 from .utils.storage import STORAGE_DIR
-
-load_dotenv()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure storage directory exists on startup
@@ -24,10 +23,10 @@ app = FastAPI(
 )
 
 # CORS configuration
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URLS = os.getenv("FRONTEND_URL", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=FRONTEND_URLS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

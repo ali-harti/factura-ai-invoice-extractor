@@ -70,6 +70,7 @@ async def extract(file_path: str) -> Tuple[str, Dict[str, Any]]:
 
     payload = {
         "model": model_name,
+        "max_tokens": 4096,
         "messages": [
             {
                 "role": "user",
@@ -97,10 +98,18 @@ async def extract(file_path: str) -> Tuple[str, Dict[str, Any]]:
                 response_json = response.json()
                 raw_response_text = response_json["choices"][0]["message"]["content"]
                 break
-            except (httpx.RequestError, httpx.HTTPStatusError, KeyError) as e:
-                last_exception = e
+            except httpx.HTTPStatusError as e:
+                error_body = e.response.text
+                last_exception = f"HTTP {e.response.status_code}: {error_body}"
+                print(f"OpenRouter Error: {last_exception}")
                 if attempt < max_retries:
-                    # Exponential backoff: 2s, 4s, 8s...
+                    await asyncio.sleep(2 ** attempt)
+                else:
+                    raise Exception(f"Failed after {max_retries} attempts: {last_exception}")
+            except Exception as e:
+                last_exception = e
+                print(f"Extraction Error: {e}")
+                if attempt < max_retries:
                     await asyncio.sleep(2 ** attempt)
                 else:
                     raise Exception(f"Failed after {max_retries} attempts: {str(last_exception)}")

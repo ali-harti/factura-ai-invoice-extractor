@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, File, CheckCircle, AlertCircle, Loader, Info } from 'lucide-react';
 import ResultsView from './ResultsView';
 import { useLanguage } from '../context/LanguageContext';
+import { uploadInvoice } from '../services/api';
 
 export default function UploadSection() {
   const sectionRef = useRef(null);
@@ -14,32 +15,7 @@ export default function UploadSection() {
   const [extractedData, setExtractedData] = useState(null);
   const [invoiceId, setInvoiceId] = useState(null);
 
-  // Poll status when processing
-  useEffect(() => {
-    let pollInterval;
-    if (uploadState === 'processing' && invoiceId) {
-      pollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`http://localhost:8000/api/v1/invoices/status/${invoiceId}`);
-          if (!res.ok) throw new Error("Failed to check status");
-          const data = await res.json();
-          
-          if (data.status === 'completed') {
-            setUploadState('complete');
-            setExtractedData(data.extracted_data);
-            clearInterval(pollInterval);
-          } else if (data.status === 'failed') {
-            setUploadState('error');
-            setErrorMsg(data.error_message || "Extraction failed.");
-            clearInterval(pollInterval);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }, 3000);
-    }
-    return () => clearInterval(pollInterval);
-  }, [uploadState, invoiceId]);
+  // Polling removed since backend extracts synchronously inline
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -85,26 +61,23 @@ export default function UploadSection() {
     if (!file) return;
     
     setUploadState('uploading');
-    const formData = new FormData();
-    formData.append('file', file);
-
+    
     try {
-      const res = await fetch('http://localhost:8000/api/v1/invoices/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // Simulate two-phase upload by switching to "processing" after 1.5s
+      // We don't await this, it just runs in parallel to update the UI
+      setTimeout(() => {
+        setUploadState((current) => current === 'uploading' ? 'processing' : current);
+      }, 1500);
+
+      const responseData = await uploadInvoice(file);
       
-      if (!res.ok) {
-        throw new Error('Upload failed');
-      }
-      
-      const data = await res.json();
-      setInvoiceId(data.id);
-      setUploadState('processing');
+      setInvoiceId(responseData.invoice_id);
+      setExtractedData(responseData.extraction);
+      setUploadState('complete');
     } catch (err) {
       console.error(err);
       setUploadState('error');
-      setErrorMsg('Network error during upload. Ensure backend is running.');
+      setErrorMsg(err.message || 'An error occurred during upload.');
     }
   };
 
@@ -223,7 +196,7 @@ export default function UploadSection() {
               {t.another}
             </button>
           </div>
-          <ResultsView data={extractedData} onDataChange={setExtractedData} />
+          <ResultsView data={extractedData} onDataChange={setExtractedData} invoiceId={invoiceId} />
         </div>
       )}
     </main>

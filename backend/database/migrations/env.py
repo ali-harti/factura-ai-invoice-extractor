@@ -11,8 +11,8 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'backend', '.env.example'))
-load_dotenv() # Override with actual .env if exists
+env_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+load_dotenv(env_path, override=True)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from dotenv import load_dotenv
 
-load_dotenv()
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(env_path, override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://factura:factura@localhost:5432/factura")
 

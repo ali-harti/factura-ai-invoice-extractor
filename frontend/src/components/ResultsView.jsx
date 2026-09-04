@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { FileText, Building2, Calendar, DollarSign, List, ChevronRight, Edit2, Save, X, Download, FileSpreadsheet } from 'lucide-react';
+import { FileText, Building2, Calendar, DollarSign, List, ChevronRight, Edit2, Save, X, Download, FileSpreadsheet, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { saveCorrections, exportInvoices } from '../services/api';
 
-export default function ResultsView({ data, onDataChange }) {
+export default function ResultsView({ data, onDataChange, invoiceId }) {
   const { language } = useLanguage();
   const [isEditingRaw, setIsEditingRaw] = useState(false);
   const [rawJsonStr, setRawJsonStr] = useState('');
   const [jsonError, setJsonError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   
   const t = {
     vendor: language === 'en' ? 'Vendor' : 'Fournisseur',
@@ -43,6 +47,81 @@ export default function ResultsView({ data, onDataChange }) {
     }).format(amount);
   };
 
+  const downloadCsvClientSide = (invData, lang) => {
+    const isFr = lang === 'fr';
+    const summaryTitle = isFr ? "RÉSUMÉ DE LA FACTURE" : "INVOICE SUMMARY";
+    const labels = {
+      invoice_number: isFr ? "Numéro de facture" : "Invoice Number",
+      vendor_name: isFr ? "Nom du fournisseur" : "Vendor Name",
+      vendor_address: isFr ? "Adresse du fournisseur" : "Vendor Address",
+      invoice_date: isFr ? "Date de facture" : "Invoice Date",
+      due_date: isFr ? "Date d'échéance" : "Due Date",
+      currency: isFr ? "Devise" : "Currency",
+      subtotal: isFr ? "Sous-total" : "Subtotal",
+      tax_rate: isFr ? "Taux de taxe" : "Tax Rate",
+      tax_amount: isFr ? "Montant de taxe" : "Tax Amount",
+      total_amount: isFr ? "Montant total" : "Total Amount",
+      confidence: isFr ? "Score de confiance" : "Confidence Score",
+    };
+    const itemsTitle = isFr ? "ARTICLES" : "LINE ITEMS";
+    const itemHeaders = isFr ? ["N°", "Description", "Quantité", "Prix unitaire", "Total"] : ["Item #", "Description", "Quantity", "Unit Price", "Total"];
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = [
+      [summaryTitle],
+      [labels.invoice_number, escapeCsv(invData.invoice_number)],
+      [labels.vendor_name, escapeCsv(invData.vendor_name)],
+      [labels.vendor_address, escapeCsv(invData.vendor_address)],
+      [labels.invoice_date, escapeCsv(invData.invoice_date)],
+      [labels.due_date, escapeCsv(invData.due_date)],
+      [labels.currency, escapeCsv(invData.currency)],
+      [labels.subtotal, escapeCsv(invData.subtotal)],
+      [labels.tax_rate, invData.tax_rate != null ? `${invData.tax_rate}%` : ''],
+      [labels.tax_amount, escapeCsv(invData.tax_amount)],
+      [labels.total_amount, escapeCsv(invData.total_amount)],
+    ];
+
+    if (invData.confidence_score != null) {
+      rows.push([labels.confidence, `${Math.round(invData.confidence_score * 100)}%`]);
+    }
+
+    rows.push([]);
+    rows.push([itemsTitle]);
+    rows.push(itemHeaders);
+
+    const lineItems = invData.line_items || [];
+    lineItems.forEach((item, idx) => {
+      rows.push([
+        idx + 1,
+        escapeCsv(item.description),
+        escapeCsv(item.quantity),
+        escapeCsv(item.unit_price),
+        escapeCsv(item.total)
+      ]);
+    });
+
+    const csvContent = '\ufeff' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = isFr
+      ? (invData.invoice_number ? `facture_${invData.invoice_number}.csv` : 'facture_donnees.csv')
+      : (invData.invoice_number ? `invoice_${invData.invoice_number}.csv` : 'invoice_data.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleDownloadJson = () => {
     let exportData = data;
     
@@ -61,7 +140,7 @@ export default function ResultsView({ data, onDataChange }) {
         montant_total: data.total_amount,
         langue_detectee: data.language_detected,
         score_confiance: data.confidence_score,
-        lignes: data.line_items ? data.line_items.map(item => ({
+        articles: data.line_items ? data.line_items.map(item => ({
           description: item.description,
           quantite: item.quantity,
           prix_unitaire: item.unit_price,
@@ -70,85 +149,30 @@ export default function ResultsView({ data, onDataChange }) {
       };
     }
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = data.invoice_number ? `facture_${data.invoice_number}.json` : 'donnees_facture.json';
-    if (language === 'en') {
-      a.download = data.invoice_number ? `invoice_${data.invoice_number}.json` : 'invoice_data.json';
-    }
+    a.download = language === 'fr' 
+      ? (data.invoice_number ? `facture_${data.invoice_number}.json` : 'facture_donnees.json')
+      : (data.invoice_number ? `invoice_${data.invoice_number}.json` : 'invoice_data.json');
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadCsv = () => {
-    const escapeCsv = (str) => {
-      if (str === null || str === undefined) return '""';
-      const s = String(str).replace(/"/g, '""');
-      return `"${s}"`;
-    };
-
-    const rows = [];
-    const isFr = language === 'fr';
-    
-    // 1. General Invoice Info
-    rows.push([isFr ? 'Numéro de Facture' : 'Invoice Number', escapeCsv(data.invoice_number)]);
-    rows.push([isFr ? 'Date de Facture' : 'Invoice Date', escapeCsv(data.invoice_date)]);
-    rows.push([isFr ? 'Date d\'Échéance' : 'Due Date', escapeCsv(data.due_date)]);
-    rows.push([isFr ? 'Nom du Fournisseur' : 'Vendor Name', escapeCsv(data.vendor_name)]);
-    rows.push([isFr ? 'Adresse du Fournisseur' : 'Vendor Address', escapeCsv(data.vendor_address?.replace(/\n/g, ' '))]);
-    rows.push([isFr ? 'Devise' : 'Currency', escapeCsv(data.currency)]);
-    rows.push([isFr ? 'Langue Détectée' : 'Language Detected', escapeCsv(data.language_detected)]);
-    rows.push([isFr ? 'Score de Confiance' : 'Confidence Score', escapeCsv(data.confidence_score !== null ? `${Math.round(data.confidence_score * 100)}%` : '')]);
-    
-    rows.push([]); // Empty row for spacing
-    
-    // 2. Financial Summary
-    rows.push([isFr ? 'Sous-total' : 'Subtotal', escapeCsv(data.subtotal)]);
-    rows.push([isFr ? 'Taux de Taxe (%)' : 'Tax Rate (%)', escapeCsv(data.tax_rate)]);
-    rows.push([isFr ? 'Montant de la Taxe' : 'Tax Amount', escapeCsv(data.tax_amount)]);
-    rows.push([isFr ? 'Montant Total' : 'Total Amount', escapeCsv(data.total_amount)]);
-    
-    rows.push([]); // Empty row for spacing
-    
-    // 3. Line Items
-    rows.push([isFr ? 'Lignes de Facture' : 'Line Items']);
-    rows.push([
-      isFr ? 'Description' : 'Description', 
-      isFr ? 'Qté' : 'Qty', 
-      isFr ? 'Prix Unitaire' : 'Unit Price', 
-      isFr ? 'Total' : 'Total'
-    ].map(escapeCsv));
-    
-    if (data.line_items && data.line_items.length > 0) {
-      data.line_items.forEach(item => {
-        rows.push([
-          escapeCsv(item.description),
-          escapeCsv(item.quantity),
-          escapeCsv(item.unit_price),
-          escapeCsv(item.total)
-        ]);
-      });
-    } else {
-      rows.push([isFr ? 'Aucune ligne trouvée' : 'No line items found']);
+  const handleDownloadCsv = async () => {
+    try {
+      if (invoiceId) {
+        await exportInvoices([invoiceId], 'csv', language);
+      } else {
+        downloadCsvClientSide(data, language);
+      }
+    } catch (err) {
+      console.warn('Backend CSV export failed, falling back to client-side export:', err);
+      downloadCsvClientSide(data, language);
     }
-
-    const csvContent = rows.map(row => row.join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = data.invoice_number ? `facture_${data.invoice_number}.csv` : 'donnees_facture.csv';
-    if (language === 'en') {
-      a.download = data.invoice_number ? `invoice_${data.invoice_number}.csv` : 'invoice_data.csv';
-    }
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const handleEditRaw = () => {
@@ -157,15 +181,25 @@ export default function ResultsView({ data, onDataChange }) {
     setIsEditingRaw(true);
   };
 
-  const handleSaveRaw = () => {
+  const handleSaveRaw = async () => {
     try {
+      setIsSaving(true);
       const parsed = JSON.parse(rawJsonStr);
+      
+      await saveCorrections(invoiceId, parsed);
+      
       if (onDataChange) {
         onDataChange(parsed);
       }
       setIsEditingRaw(false);
+      
+      // Show success indicator
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setJsonError(language === 'en' ? 'Invalid JSON format' : 'Format JSON invalide');
+      setJsonError(err.message || (language === 'en' ? 'Invalid JSON format' : 'Format JSON invalide'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -371,16 +405,23 @@ export default function ResultsView({ data, onDataChange }) {
                   </button>
                   <button
                     onClick={handleSaveRaw}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent text-white hover:bg-accent/90 text-xs font-medium transition-colors"
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent text-white hover:bg-accent/90 text-xs font-medium transition-colors disabled:opacity-50"
                   >
                     <Save size={14} />
-                    {language === 'en' ? 'Save' : 'Enregistrer'}
+                    {isSaving ? (language === 'en' ? 'Saving...' : 'Enregistrement...') : (language === 'en' ? 'Save' : 'Enregistrer')}
                   </button>
                 </div>
               </div>
             )}
           </div>
         </details>
+        {saveSuccess && !isEditingRaw && (
+          <span className="inline-flex items-center gap-1.5 ml-4 mt-2 text-green-500 text-xs font-semibold animate-in fade-in slide-in-from-left-2 duration-300">
+            <Check size={14} />
+            {language === 'en' ? 'Saved' : 'Enregistré'}
+          </span>
+        )}
       </div>
     </div>
   );
