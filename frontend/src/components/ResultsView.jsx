@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { FileText, Building2, Calendar, DollarSign, List, ChevronRight, Edit2, Save, X, Download, FileSpreadsheet, Check } from 'lucide-react';
+import { FileText, Building2, Calendar, DollarSign, List, ChevronRight, Edit2, Edit3, Save, X, Download, FileSpreadsheet, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { saveCorrections, exportInvoices } from '../services/api';
+import FieldEditor from './FieldEditor';
 
 export default function ResultsView({ data, onDataChange, invoiceId }) {
   const { language } = useLanguage();
   const [isEditingRaw, setIsEditingRaw] = useState(false);
+  const [isEditingFields, setIsEditingFields] = useState(false);
   const [rawJsonStr, setRawJsonStr] = useState('');
   const [jsonError, setJsonError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -212,6 +214,13 @@ export default function ResultsView({ data, onDataChange, invoiceId }) {
     <div className="micro-ui-card p-6 mt-8 relative">
       {/* Top Action Bar */}
       <div className="flex justify-end mb-4 gap-2">
+        <button
+          onClick={() => setIsEditingFields(true)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 rounded-md text-xs font-semibold transition-colors"
+        >
+          <Edit3 size={14} />
+          {language === 'en' ? 'Edit Fields' : 'Modifier les champs'}
+        </button>
         <button
           onClick={handleDownloadCsv}
           className="flex items-center gap-2 px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 text-foreground/80 hover:text-foreground rounded-md text-xs font-semibold transition-colors"
@@ -423,6 +432,18 @@ export default function ResultsView({ data, onDataChange, invoiceId }) {
           </span>
         )}
       </div>
+
+      <FieldEditor
+        data={data}
+        invoiceId={invoiceId}
+        isOpen={isEditingFields}
+        onClose={() => setIsEditingFields(false)}
+        onSaveSuccess={(updated) => {
+          if (onDataChange) onDataChange(updated);
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
+        }}
+      />
     </div>
   );
 }

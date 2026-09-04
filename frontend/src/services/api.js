@@ -1,4 +1,15 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+let baseApiUrl = (import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '').trim();
+if (baseApiUrl.endsWith('/api')) {
+  baseApiUrl = baseApiUrl.slice(0, -4);
+} else if (baseApiUrl.endsWith('/')) {
+  baseApiUrl = baseApiUrl.slice(0, -1);
+}
+if (!baseApiUrl && typeof window !== 'undefined' && window.location.port !== '5173') {
+  baseApiUrl = '';
+} else if (!baseApiUrl) {
+  baseApiUrl = 'http://localhost:8000';
+}
+const API_URL = baseApiUrl;
 
 /**
  * Handle API responses globally, throwing standard errors

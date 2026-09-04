@@ -7,18 +7,18 @@
     /* Claude Style - Light Mode */
     --bg-color: #F9F9F8; /* Soft off-white */
     --fg-color: #1E1E1E; /* Dark gray */
-    --accent-color: #D47A5A; /* Muted orange/rust */
+    --accent-color: #E8724A; /* Coral orange */
     --card-bg: #FFFFFF;
     --border-color: #E5E5E5;
   }
 
   .dark {
-    /* Claude Style - Dark Mode */
-    --bg-color: #1A1A1A; /* Soft dark */
+    /* Dark Mode */
+    --bg-color: #0f0f0f; /* Pitch dark */
     --fg-color: #EAEAEA; /* Light gray */
-    --accent-color: #D47A5A;
-    --card-bg: #242424;
-    --border-color: #333333;
+    --accent-color: #E8724A;
+    --card-bg: #1a1a1a;
+    --border-color: #262626;
   }
 
   body {

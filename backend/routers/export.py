@@ -8,9 +8,12 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from ..database.connection import get_db
-from ..models.invoice import Invoice, Extraction
+try:
+    from ..database.connection import get_db
+    from ..models.invoice import Invoice, Extraction
+except (ImportError, ValueError):
+    from database.connection import get_db
+    from models.invoice import Invoice, Extraction
 
 router = APIRouter()
 
