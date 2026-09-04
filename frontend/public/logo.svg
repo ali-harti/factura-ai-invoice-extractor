@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="22 22 76 76">
+  <defs>
+    <mask id="scan-gap">
+      <rect x="0" y="0" width="120" height="120" fill="white" />
+      <line x1="0" y1="65" x2="120" y2="65" stroke="black" stroke-width="12" />
+    </mask>
+  </defs>
+  <g mask="url(#scan-gap)" fill="none" stroke="#DE6646" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- Document Outline -->
+    <path d="M 35 95 L 85 95 L 85 40 L 70 25 L 35 25 Z" />
+    <!-- Fold -->
+    <path d="M 70 25 L 70 40 L 85 40" />
+    <!-- Top line -->
+    <line x1="45" y1="40" x2="60" y2="40" />
+    <!-- Box -->
+    <path d="M 45 52 L 75 52 L 75 78 L 45 78 Z" />
+    <!-- Vertical line in box -->
+    <line x1="65" y1="52" x2="65" y2="78" />
+    <!-- Bottom line -->
+    <line x1="65" y1="87" x2="75" y2="87" />
+  </g>
+  
+  <!-- Scanning Line -->
+  <line x1="25" y1="65" x2="95" y2="65" stroke="#DE6646" stroke-width="4.5" stroke-linecap="square" />
+  <!-- Circle on Scanning Line -->
+  <circle cx="75" cy="65" r="5" fill="#DE6646" />
+</svg>
