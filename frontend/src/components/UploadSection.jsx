@@ -1,8 +1,43 @@
-import { useState, useRef, useEffect } from 'react';
-import { Upload, File, CheckCircle, AlertCircle, Loader, Info } from 'lucide-react';
+import { useState, useRef, useEffect, Component } from 'react';
+import { Upload, File, CheckCircle, AlertCircle, Loader, RefreshCw } from 'lucide-react';
 import ResultsView from './ResultsView';
 import { useLanguage } from '../context/LanguageContext';
 import { uploadInvoice } from '../services/api';
+
+// Error boundary to catch ResultsView crashes and show a message instead of a black screen
+class ResultsErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('ResultsView crashed:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="mt-6 p-6 bg-card border border-border rounded-xl text-center">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <p className="font-semibold text-foreground mb-1">Could not display results</p>
+          <p className="text-sm text-foreground/60 mb-4">
+            {this.state.error?.message || 'An unexpected error occurred while rendering the extracted data.'}
+          </p>
+          <button
+            onClick={this.props.onReset}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+          >
+            <RefreshCw size={14} />
+            Try Another Invoice
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function UploadSection() {
   const sectionRef = useRef(null);
@@ -70,9 +105,15 @@ export default function UploadSection() {
       }, 1500);
 
       const responseData = await uploadInvoice(file);
-      
-      setInvoiceId(responseData.invoice_id);
-      setExtractedData(responseData.extraction);
+
+      const extraction = responseData.extraction || responseData.parsed_data || null;
+      if (!extraction || typeof extraction !== 'object') {
+        throw new Error('Server returned no extractable data. Please try again.');
+      }
+
+      // invoice_id may be a UUID object — always stringify it
+      setInvoiceId(responseData.invoice_id ? String(responseData.invoice_id) : null);
+      setExtractedData(extraction);
       setUploadState('complete');
     } catch (err) {
       console.error(err);
@@ -196,7 +237,9 @@ export default function UploadSection() {
               {t.another}
             </button>
           </div>
-          <ResultsView data={extractedData} onDataChange={setExtractedData} invoiceId={invoiceId} />
+          <ResultsErrorBoundary onReset={reset}>
+            <ResultsView data={extractedData} onDataChange={setExtractedData} invoiceId={invoiceId} />
+          </ResultsErrorBoundary>
         </div>
       )}
     </main>

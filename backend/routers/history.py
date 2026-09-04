@@ -5,12 +5,17 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, desc, func
+from sqlalchemy.orm import selectinload
 try:
     from ..database.connection import get_db
     from ..models.invoice import Invoice, InvoiceStatus, Extraction
+    from ..models.user import User, UserRole
+    from ..services.auth import get_current_user
 except (ImportError, ValueError):
     from database.connection import get_db
     from models.invoice import Invoice, InvoiceStatus, Extraction
+    from models.user import User, UserRole
+    from services.auth import get_current_user
 
 router = APIRouter()
 
@@ -22,12 +27,18 @@ async def get_history(
     status: Optional[str] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     offset = (page - 1) * limit
     
     stmt = select(Invoice).options(selectinload(Invoice.extraction))
     count_stmt = select(func.count(Invoice.id))
+
+    # User isolation: users can only see their own invoices (unless admin)
+    if current_user.role != UserRole.admin:
+        stmt = stmt.filter(Invoice.user_id == current_user.id)
+        count_stmt = count_stmt.filter(Invoice.user_id == current_user.id)
     
     if vendor:
         stmt = stmt.join(Extraction).filter(
@@ -116,7 +127,8 @@ async def get_history(
 @router.get("/{id}")
 async def get_invoice(
     id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         uuid_obj = uuid.UUID(id)
@@ -124,6 +136,9 @@ async def get_invoice(
         raise HTTPException(status_code=400, detail={"error": "Invalid ID", "detail": "Invalid UUID format"})
     
     stmt = select(Invoice).options(selectinload(Invoice.extraction)).filter(Invoice.id == uuid_obj)
+    if current_user.role != UserRole.admin:
+        stmt = stmt.filter(Invoice.user_id == current_user.id)
+
     result = await db.execute(stmt)
     inv = result.scalars().first()
     

@@ -6,11 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 try:
     from ..database.connection import get_db
     from ..models.invoice import Invoice, InvoiceStatus, Extraction
+    from ..models.user import User
+    from ..services.auth import get_current_user
     from ..utils.storage import get_storage_path
     from ..services.ocr import extract
 except (ImportError, ValueError):
     from database.connection import get_db
     from models.invoice import Invoice, InvoiceStatus, Extraction
+    from models.user import User
+    from services.auth import get_current_user
     from utils.storage import get_storage_path
     from services.ocr import extract
 
@@ -21,7 +25,8 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "application/pdf"}
 @router.post("/upload")
 async def upload_invoice(
     file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
@@ -46,7 +51,8 @@ async def upload_invoice(
     invoice = Invoice(
         original_filename=file.filename,
         storage_path=storage_path,
-        status=InvoiceStatus.processing
+        status=InvoiceStatus.processing,
+        user_id=current_user.id
     )
     db.add(invoice)
     await db.commit()
