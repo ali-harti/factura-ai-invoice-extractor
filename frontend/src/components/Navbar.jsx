@@ -53,9 +53,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 w-full border-b border-border bg-background/90 backdrop-blur-md py-3 px-4 sm:px-6 flex items-center justify-between z-50 transition-colors duration-300">
       {/* Brand logo & name */}
       <Link to="/" className="font-mukta font-bold text-2xl tracking-tight text-foreground flex items-center gap-1.5 hover:opacity-90 transition-opacity">
-        <div className="w-7 h-7 rounded-lg bg-[#E8724A] flex items-center justify-center font-bold text-sm text-white shadow-sm">
-          F
-        </div>
+        <img src="/logo.svg" alt="Factura logo" className="w-7 h-7" />
         <span>Factura</span>
       </Link>
 

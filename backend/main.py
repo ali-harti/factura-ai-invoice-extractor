@@ -37,7 +37,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS configuration
 FRONTEND_URLS = os.getenv("FRONTEND_URL", "http://localhost:3000").split(",")
-FRONTEND_URLS.extend(["http://localhost", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1"])
+FRONTEND_URLS.extend([
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1",
+    "http://127.0.0.1:5174",
+])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(set(FRONTEND_URLS)),

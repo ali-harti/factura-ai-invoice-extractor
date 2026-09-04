@@ -118,9 +118,7 @@ export default function LoginPage() {
         {/* Top Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-[#E8724A] flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-[#E8724A]/25">
-              F
-            </div>
+            <img src="/logo.svg" alt="Factura logo" className="w-10 h-10" />
             <span className="text-2xl font-bold tracking-tight text-white">
               Factura
             </span>
