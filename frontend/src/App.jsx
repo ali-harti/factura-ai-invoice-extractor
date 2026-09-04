@@ -3,6 +3,8 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import UploadSection from './components/UploadSection';
+import HistoryPage from './pages/history/page';
+import InvoiceDetailPage from './pages/history/[id]/page';
 
 function UploadPage() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<UploadPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/history/:id" element={<InvoiceDetailPage />} />
           </Routes>
         </div>
       </ThemeProvider>
