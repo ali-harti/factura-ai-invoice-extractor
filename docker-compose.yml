@@ -1,0 +1,148 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: factura_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-factura}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-factura}
+      POSTGRES_DB: ${POSTGRES_DB:-factura}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-factura} -d ${POSTGRES_DB:-factura}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - factura_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: factura_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - factura_network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: factura_api
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-factura}:${POSTGRES_PASSWORD:-factura}@postgres:5432/${POSTGRES_DB:-factura}
+      REDIS_URL: redis://redis:6379/0
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      MODEL_ENDPOINT: ${MODEL_ENDPOINT:-https://openrouter.ai/api/v1}
+      MODEL_NAME: ${MODEL_NAME:-qwen/qwen2.5-vl-72b-instruct}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - invoice_storage:/data/invoices
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - factura_network
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: factura_celery
+    restart: unless-stopped
+    command: celery -A worker.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-factura}:${POSTGRES_PASSWORD:-factura}@postgres:5432/${POSTGRES_DB:-factura}
+      REDIS_URL: redis://redis:6379/0
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      MODEL_ENDPOINT: ${MODEL_ENDPOINT:-https://openrouter.ai/api/v1}
+      MODEL_NAME: ${MODEL_NAME:-qwen/qwen2.5-vl-72b-instruct}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      - invoice_storage:/data/invoices
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - factura_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost/api
+        VITE_API_URL: http://localhost/api
+    container_name: factura_frontend
+    restart: unless-stopped
+    command: npm start
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost/api
+      VITE_API_URL: http://localhost/api
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - factura_network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: factura_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      frontend:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - factura_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  invoice_storage:
+
+networks:
+  factura_network:
+    driver: bridge

@@ -3,10 +3,16 @@ import aiofiles
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..database.connection import get_db
-from ..models.invoice import Invoice, InvoiceStatus, Extraction
-from ..utils.storage import get_storage_path
-from ..services.ocr import extract
+try:
+    from ..database.connection import get_db
+    from ..models.invoice import Invoice, InvoiceStatus, Extraction
+    from ..utils.storage import get_storage_path
+    from ..services.ocr import extract
+except (ImportError, ValueError):
+    from database.connection import get_db
+    from models.invoice import Invoice, InvoiceStatus, Extraction
+    from utils.storage import get_storage_path
+    from services.ocr import extract
 
 router = APIRouter()
 

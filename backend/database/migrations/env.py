@@ -29,7 +29,11 @@ config.set_main_option("sqlalchemy.url", database_url)
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from backend.models import Base
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+try:
+    from backend.models import Base
+except ImportError:
+    from models import Base
 
 target_metadata = Base.metadata
 

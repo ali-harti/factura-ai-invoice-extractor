@@ -5,8 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
 
-from .routers import extract, history, export
-from .utils.storage import STORAGE_DIR
+try:
+    from .routers import extract, history, export
+    from .utils.storage import STORAGE_DIR
+except (ImportError, ValueError):
+    from routers import extract, history, export
+    from utils.storage import STORAGE_DIR
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure storage directory exists on startup
@@ -24,16 +29,18 @@ app = FastAPI(
 
 # CORS configuration
 FRONTEND_URLS = os.getenv("FRONTEND_URL", "http://localhost:3000").split(",")
+FRONTEND_URLS.extend(["http://localhost", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1"])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=FRONTEND_URLS,
+    allow_origins=list(set(FRONTEND_URLS)),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Health check
+# Health check (accessible via /health and /api/health)
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 async def health_check():
     return {"status": "ok"}
 
@@ -44,4 +51,4 @@ app.include_router(export.router, prefix="/api/v1/invoices", tags=["Export"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

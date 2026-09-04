@@ -5,9 +5,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, desc, func
-from sqlalchemy.orm import selectinload
-from ..database.connection import get_db
-from ..models.invoice import Invoice, InvoiceStatus, Extraction
+try:
+    from ..database.connection import get_db
+    from ..models.invoice import Invoice, InvoiceStatus, Extraction
+except (ImportError, ValueError):
+    from database.connection import get_db
+    from models.invoice import Invoice, InvoiceStatus, Extraction
 
 router = APIRouter()
 
