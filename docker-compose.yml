@@ -49,6 +49,11 @@ services:
       MODEL_ENDPOINT: ${MODEL_ENDPOINT:-https://openrouter.ai/api/v1}
       MODEL_NAME: ${MODEL_NAME:-qwen/qwen2.5-vl-72b-instruct}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-8}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     volumes:
       - invoice_storage:/data/invoices
     depends_on:
@@ -81,6 +86,8 @@ services:
       MODEL_ENDPOINT: ${MODEL_ENDPOINT:-https://openrouter.ai/api/v1}
       MODEL_NAME: ${MODEL_NAME:-qwen/qwen2.5-vl-72b-instruct}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
     volumes:
       - invoice_storage:/data/invoices
     depends_on:
@@ -98,12 +105,16 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost/api
         VITE_API_URL: http://localhost/api
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: factura_frontend
     restart: unless-stopped
     command: npm start
     environment:
       NEXT_PUBLIC_API_URL: http://localhost/api
       VITE_API_URL: http://localhost/api
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     depends_on:
       api:
         condition: service_healthy

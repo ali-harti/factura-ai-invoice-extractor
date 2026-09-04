@@ -5,11 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 try:
-    from .routers import extract, history, export
+    from .routers import extract, history, export, auth
+    from .routers.auth import limiter
     from .utils.storage import STORAGE_DIR
 except (ImportError, ValueError):
-    from routers import extract, history, export
+    from routers import extract, history, export, auth
+    from routers.auth import limiter
     from utils.storage import STORAGE_DIR
 
 @asynccontextmanager
@@ -26,6 +31,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS configuration
 FRONTEND_URLS = os.getenv("FRONTEND_URL", "http://localhost:3000").split(",")
@@ -45,6 +53,7 @@ async def health_check():
     return {"status": "ok"}
 
 # Register routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(extract.router, prefix="/api/v1/invoices", tags=["Invoices"])
 app.include_router(history.router, prefix="/api/v1/invoices", tags=["History"])
 app.include_router(export.router, prefix="/api/v1/invoices", tags=["Export"])

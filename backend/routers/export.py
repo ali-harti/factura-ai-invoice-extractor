@@ -8,12 +8,17 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 try:
     from ..database.connection import get_db
     from ..models.invoice import Invoice, Extraction
+    from ..models.user import User, UserRole
+    from ..services.auth import get_current_user
 except (ImportError, ValueError):
     from database.connection import get_db
     from models.invoice import Invoice, Extraction
+    from models.user import User, UserRole
+    from services.auth import get_current_user
 
 router = APIRouter()
 
@@ -28,9 +33,13 @@ class PatchCorrections(BaseModel):
 @router.post("/export")
 async def export_invoices(
     req: ExportRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     stmt = select(Invoice).options(selectinload(Invoice.extraction)).filter(Invoice.id.in_(req.ids))
+    if current_user.role != UserRole.admin:
+        stmt = stmt.filter(Invoice.user_id == current_user.id)
+
     result = await db.execute(stmt)
     invoices = result.scalars().all()
     
@@ -165,9 +174,13 @@ async def export_invoices(
 async def patch_invoice(
     id: str,
     payload: PatchCorrections,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    stmt = select(Extraction).filter(Extraction.invoice_id == id)
+    stmt = select(Extraction).join(Invoice, Extraction.invoice_id == Invoice.id).filter(Extraction.invoice_id == id)
+    if current_user.role != UserRole.admin:
+        stmt = stmt.filter(Invoice.user_id == current_user.id)
+
     result = await db.execute(stmt)
     extraction = result.scalars().first()
     

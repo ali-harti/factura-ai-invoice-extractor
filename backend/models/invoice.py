@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Optional
 from sqlalchemy import String, Float, DateTime, ForeignKey, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -18,12 +19,14 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     original_filename: Mapped[str] = mapped_column(String, nullable=False)
     storage_path: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[InvoiceStatus] = mapped_column(SQLAlchemyEnum(InvoiceStatus), default=InvoiceStatus.queued)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    user = relationship("User", back_populates="invoices")
     extraction = relationship("Extraction", back_populates="invoice", cascade="all, delete-orphan", uselist=False)
 
 class Extraction(Base):

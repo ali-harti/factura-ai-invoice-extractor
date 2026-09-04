@@ -25,19 +25,68 @@ async function handleResponse(response) {
     }
     
     // Map backend statuses to specific UI messages as requested
-    if (response.status === 400 && errorMessage.toLowerCase().includes('type')) {
+    if (response.status === 400 && typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('type')) {
       throw new Error("Only PDF, JPG and PNG files are supported.");
     }
-    if (response.status === 400 && errorMessage.toLowerCase().includes('large')) {
+    if (response.status === 400 && typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('large')) {
       throw new Error("File exceeds the 20MB limit.");
     }
-    if (response.status === 500 && errorMessage.toLowerCase().includes('extraction failed')) {
+    if (response.status === 500 && typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('extraction failed')) {
       throw new Error("Extraction failed. Please try again or use a clearer scan.");
     }
     
-    throw new Error(errorMessage);
+    throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
   }
   return response.json();
+}
+
+/**
+ * Auth API Endpoints
+ */
+export async function registerUser({ email, password, full_name }) {
+  const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, password, full_name }),
+  });
+  return await handleResponse(response);
+}
+
+export async function loginUser({ email, password }) {
+  const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  });
+  return await handleResponse(response);
+}
+
+export async function googleLoginUser({ token }) {
+  const response = await fetch(`${API_URL}/api/v1/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ token }),
+  });
+  return await handleResponse(response);
+}
+
+export async function logoutUser() {
+  const response = await fetch(`${API_URL}/api/v1/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  return await handleResponse(response);
+}
+
+export async function getMe() {
+  const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+    headers: { 'Accept': 'application/json' },
+    credentials: 'include',
+  });
+  return await handleResponse(response);
 }
 
 /**
@@ -51,10 +100,10 @@ export async function uploadInvoice(file) {
     const response = await fetch(`${API_URL}/api/v1/invoices/upload`, {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
     return await handleResponse(response);
   } catch (error) {
-    // If it's a TypeError from fetch, it means network error
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error("Cannot reach the server. Make sure the backend is running.");
     }
@@ -72,7 +121,9 @@ export async function getHistory({ page = 1, limit = 10, vendor, status, date_fr
   if (date_from) params.append('date_from', date_from);
   if (date_to) params.append('date_to', date_to);
 
-  const response = await fetch(`${API_URL}/api/v1/invoices?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/v1/invoices?${params.toString()}`, {
+    credentials: 'include',
+  });
   return await handleResponse(response);
 }
 
@@ -80,7 +131,9 @@ export async function getHistory({ page = 1, limit = 10, vendor, status, date_fr
  * Get a specific invoice by ID
  */
 export async function getInvoice(id) {
-  const response = await fetch(`${API_URL}/api/v1/invoices/${id}`);
+  const response = await fetch(`${API_URL}/api/v1/invoices/${id}`, {
+    credentials: 'include',
+  });
   return await handleResponse(response);
 }
 
@@ -94,6 +147,7 @@ export async function saveCorrections(invoiceId, corrections) {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
+    credentials: 'include',
     body: JSON.stringify({ human_corrections: corrections }),
   });
   return await handleResponse(response);
@@ -108,6 +162,7 @@ export async function exportInvoices(ids, format, language = 'en') {
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
     body: JSON.stringify({ ids, format, language }),
   });
 
@@ -115,11 +170,9 @@ export async function exportInvoices(ids, format, language = 'en') {
     throw new Error("Failed to export invoices");
   }
 
-  // Handle blob response for file download
   const blob = await response.blob();
   const url = window.URL.createObjectURL(blob);
   
-  // Extract filename from Content-Disposition header if possible
   const contentDisposition = response.headers.get('Content-Disposition');
   const isFr = (language || '').toLowerCase().startsWith('fr');
   let filename = isFr 
@@ -133,14 +186,12 @@ export async function exportInvoices(ids, format, language = 'en') {
     }
   }
 
-  // Trigger download
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   
-  // Cleanup
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
