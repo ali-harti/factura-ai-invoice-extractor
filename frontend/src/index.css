@@ -1,21 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   FACTURA — Global Design Tokens
+   Tailwind custom colors map to these CSS variables.
+   See tailwind.config.js for the mapping.
+   ============================================================ */
+
 @layer base {
   :root {
-    /* Claude Style - Light Mode */
-    --bg-color: #F9F9F8; /* Soft off-white */
-    --fg-color: #1E1E1E; /* Dark gray */
-    --accent-color: #E8724A; /* Coral orange */
+    /* Light mode */
+    --bg-color: #F9F9F8;
+    --fg-color: #1E1E1E;
+    --accent-color: #E8724A;
     --card-bg: #FFFFFF;
     --border-color: #E5E5E5;
   }
 
   .dark {
-    /* Dark Mode */
-    --bg-color: #0f0f0f; /* Pitch dark */
-    --fg-color: #EAEAEA; /* Light gray */
+    /* Dark mode */
+    --bg-color: #0f0f0f;
+    --fg-color: #EAEAEA;
     --accent-color: #E8724A;
     --card-bg: #1a1a1a;
     --border-color: #262626;
@@ -27,11 +34,12 @@
 }
 
 @layer utilities {
+  /* Shared transition helper */
   .interactive-element {
     @apply transition-colors duration-200 ease-in-out;
   }
 
-  /* Minimalist clean cards */
+  /* Reusable card surface */
   .micro-ui-card {
     @apply bg-card border border-border rounded-xl shadow-sm relative overflow-hidden transition-all duration-300;
   }
