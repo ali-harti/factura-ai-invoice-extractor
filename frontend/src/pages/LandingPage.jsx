@@ -136,16 +136,17 @@ export default function LandingPage() {
     const init = () => {
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
-      const n = Math.min(Math.floor((canvas.width * canvas.height) / 12000), 150);
+      // Higher density: 1 particle per 4000 px², capped at 400
+      const n = Math.min(Math.floor((canvas.width * canvas.height) / 4000), 400);
       particles = Array.from({ length: n }, () => ({
         x:       Math.random() * canvas.width,
         y:       Math.random() * canvas.height,
-        radius:  Math.random() * 1.5 + 0.5,
-        vx:      (Math.random() - 0.5) * 0.3,
-        vy:      (Math.random() - 0.5) * 0.3,
-        alpha:   Math.random(),
-        dAlpha:  (Math.random() - 0.5) * 0.015,
-        accent:  Math.random() > 0.85,
+        radius:  Math.random() * 3 + 1,          // 1 – 4 px
+        vx:      (Math.random() - 0.5) * 0.35,
+        vy:      (Math.random() - 0.5) * 0.35,
+        alpha:   Math.random() * 0.7 + 0.1,       // 0.1 – 0.8 opacity
+        dAlpha:  (Math.random() - 0.5) * 0.012,
+        accent:  Math.random() > 0.75,             // 25% accent colour
       }));
     };
 
@@ -157,7 +158,7 @@ export default function LandingPage() {
       particles.forEach((p) => {
         p.x += p.vx; p.y += p.vy;
         p.alpha += p.dAlpha;
-        if (p.alpha <= 0.05 || p.alpha >= 0.8) p.dAlpha *= -1;
+        if (p.alpha <= 0.1 || p.alpha >= 0.85) p.dAlpha *= -1;
         if (p.x < 0) p.x = canvas.width;
         if (p.x > canvas.width) p.x = 0;
         if (p.y < 0) p.y = canvas.height;
@@ -212,10 +213,11 @@ export default function LandingPage() {
       {/* Scroll progress */}
       <div className="scroll-progress" style={{ width: `${progress}%` }} />
 
-      {/* BG orbs */}
+      {/* BG orbs — three for depth */}
       <div className="bg-orbs">
         <div className="orb orb-1" />
         <div className="orb orb-2" />
+        <div className="orb orb-3" />
       </div>
 
       {/* ── NAVBAR ── */}
