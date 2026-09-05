@@ -208,7 +208,7 @@ export default function LandingPage() {
   return (
     <div className="landing-root">
       {/* Canvas particles */}
-      <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: -5 }} />
+      <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 0 }} />
 
       {/* Scroll progress */}
       <div className="scroll-progress" style={{ width: `${progress}%` }} />
@@ -255,7 +255,7 @@ export default function LandingPage() {
             </button>
 
             <a href="/login"  className="l-nav-signin"    onClick={(e) => { e.preventDefault(); navigate('/login');  }}>{t('Sign In',     'Connexion')}</a>
-            <a href="/signup" className="l-btn l-btn-primary l-nav" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>{t('Get Started', 'Démarrer')}</a>
+            <a href="/signup" className="l-nav-cta l-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>{t('Get Started', 'Démarrer')}</a>
           </div>
         </div>
       </nav>
