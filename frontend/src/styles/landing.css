@@ -483,7 +483,8 @@
   transition: all 0.3s ease;
 }
 .l-upload-icon {
-  margin-bottom: 1.2rem;
+  margin: 0 auto 1.2rem auto;
+  display: block;
   overflow: visible;
 }
 .l-upload-arrow {
