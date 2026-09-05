@@ -198,9 +198,24 @@ export default function LandingPage() {
     }
   };
 
-  /* ─── Headline words with key reset on lang change ─── */
-  const headlineText  = t('Any invoice. Any language. Seconds.', 'Toute facture. Toute langue. En secondes.');
-  const headlineWords = headlineText.split(' ');
+  /* ─── Headline ─── */
+  const renderHeadline = () => {
+    if (lang === 'fr') {
+      return (
+        <>
+          <span className="reveal-word" style={{ animationDelay: '0s' }}>Toute facture.</span><br />
+          <span className="reveal-word" style={{ animationDelay: '0.15s' }}>Toute langue.</span><br />
+          <span className="reveal-word" style={{ animationDelay: '0.3s' }}>En secondes.</span>
+        </>
+      );
+    }
+    return (
+      <>
+        <span className="reveal-word" style={{ animationDelay: '0s' }}>Any invoice. Any</span><br />
+        <span className="reveal-word" style={{ animationDelay: '0.15s' }}>language. Seconds.</span>
+      </>
+    );
+  };
 
   /* ═══════════════════════════════════
      RENDER
@@ -265,11 +280,7 @@ export default function LandingPage() {
         <div className="l-hero-bg" />
         <div className="l-container l-hero-content fade-up">
           <h1 className="l-hero-headline">
-            {headlineWords.map((word, i) => (
-              <span key={`${lang}-${i}`} className="reveal-word" style={{ animationDelay: `${i * 0.15}s` }}>
-                {word}{' '}
-              </span>
-            ))}
+            {renderHeadline()}
           </h1>
           <p className="l-hero-sub">
             {t(
