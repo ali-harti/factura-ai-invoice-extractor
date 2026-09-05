@@ -467,9 +467,9 @@
   0%, 100% { border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 rgba(232, 114, 74, 0); transform: translateY(0); }
   50% { border-color: rgba(232, 114, 74, 0.4); box-shadow: 0 0 20px rgba(232, 114, 74, 0.15); transform: translateY(-4px); }
 }
-@keyframes uploadIconFloat {
-  0%, 100% { transform: translateY(0); color: var(--text-muted); filter: drop-shadow(0 0 0 rgba(232,114,74,0)); }
-  50% { transform: translateY(-8px); color: var(--accent); filter: drop-shadow(0 0 8px rgba(232,114,74,0.6)); }
+@keyframes uploadArrowFloat {
+  0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 4px rgba(232,114,74,0.3)); }
+  50% { transform: translateY(-6px); filter: drop-shadow(0 0 12px rgba(232,114,74,0.8)); }
 }
 .l-upload-box {
   text-align: center;
@@ -484,8 +484,12 @@
 }
 .l-upload-icon {
   margin-bottom: 1.2rem;
-  transition: all 0.3s ease;
-  animation: uploadIconFloat 4s ease-in-out infinite;
+  overflow: visible;
+}
+.l-upload-arrow {
+  stroke: var(--accent);
+  animation: uploadArrowFloat 3s ease-in-out infinite;
+  transform-origin: center;
 }
 .l-upload-title {
   color: var(--text);

@@ -376,10 +376,12 @@ export default function LandingPage() {
             </div>
             <div className="l-feature-visual">
               <div className="l-upload-box">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" className="l-upload-icon">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" strokeWidth="2" className="l-upload-icon">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="var(--text-muted)" />
+                  <g className="l-upload-arrow">
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </g>
                 </svg>
                 <p className="l-upload-title">{t('Drag and drop invoice', 'Glissez-déposez la facture')}</p>
                 <p className="l-upload-subtitle">PDF, PNG, JPG (max 20MB)</p>
