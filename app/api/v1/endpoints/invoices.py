@@ -7,8 +7,9 @@ from app.services.storage import storage_service
 from app.services.file_validation import validate_invoice_file
 from app.worker.tasks import process_invoice
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, List
 from app.schemas.invoice import InvoiceExtractionSchema
+from app.api.deps import get_current_user
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,21 +27,22 @@ class InvoiceStatusResponse(BaseModel):
     error_message: Optional[str] = None
     extracted_data: Optional[Any] = None # Or InvoiceExtractionSchema if typed
 
+class InvoiceHistoryResponse(BaseModel):
+    id: int
+    original_filename: str
+    file_type: str
+    file_size: int
+    status: str
+    created_at: Any
+
 @router.post("/upload", response_model=InvoiceResponse)
 async def upload_invoice(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     # 1. Validate File
     validate_invoice_file(file)
-    
-    # Mock user auth for MVP
-    user = db.query(User).first()
-    if not user:
-        user = User(email="test@example.com", password_hash="dummy")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
 
     # 2. Save File
     try:
@@ -54,7 +56,7 @@ async def upload_invoice(
     file_size = file.file.tell()
     
     new_invoice = Invoice(
-        user_id=user.id,
+        user_id=current_user.id,
         original_filename=file.filename,
         file_path=saved_path,
         file_type=file.content_type,
@@ -90,3 +92,11 @@ def get_invoice_status(invoice_id: int, db: Session = Depends(get_db)):
         response.extracted_data = invoice.extraction.parsed_data
         
     return response
+
+@router.get("/", response_model=List[InvoiceHistoryResponse])
+def get_invoice_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    invoices = db.query(Invoice).filter(Invoice.user_id == current_user.id).order_by(Invoice.created_at.desc()).all()
+    return invoices

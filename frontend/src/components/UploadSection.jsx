@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Upload, File, CheckCircle, AlertCircle, Loader, Info } from 'lucide-react';
 import ResultsView from './ResultsView';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function UploadSection() {
   const sectionRef = useRef(null);
   const { language } = useLanguage();
+  const { currentUser } = useAuth();
   
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
@@ -20,7 +22,15 @@ export default function UploadSection() {
     if (uploadState === 'processing' && invoiceId) {
       pollInterval = setInterval(async () => {
         try {
-          const res = await fetch(`http://localhost:8000/api/v1/invoices/status/${invoiceId}`);
+          let token = '';
+          if (currentUser) {
+            token = await currentUser.getIdToken();
+          }
+          const res = await fetch(`http://127.0.0.1:8000/api/v1/invoices/status/${invoiceId}`, {
+            headers: {
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+          });
           if (!res.ok) throw new Error("Failed to check status");
           const data = await res.json();
           
@@ -89,8 +99,16 @@ export default function UploadSection() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/invoices/upload', {
+      let token = '';
+      if (currentUser) {
+        token = await currentUser.getIdToken();
+      }
+      
+      const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/upload', {
         method: 'POST',
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: formData,
       });
       
@@ -129,7 +147,7 @@ export default function UploadSection() {
   };
 
   return (
-    <main ref={sectionRef} className="flex-1 w-full max-w-3xl mx-auto px-6 py-12 flex flex-col">
+    <main ref={sectionRef} className="flex-1 w-full max-w-3xl mx-auto px-6 py-12 flex flex-col relative z-10">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold mb-2">{t.title}</h1>
         <p className="text-foreground/70 text-sm">{t.subtitle}</p>
@@ -144,8 +162,8 @@ export default function UploadSection() {
             onDragOver={handleDrag} 
             onDrop={handleDrop}
             onSubmit={(e) => e.preventDefault()}
-            className={`border-2 border-dashed rounded-xl p-10 transition-colors flex flex-col items-center justify-center text-center
-              ${dragActive ? 'border-accent bg-accent/5' : 'border-border hover:border-foreground/30 bg-card'}
+            className={`border rounded-[2rem] p-10 transition-colors flex flex-col items-center justify-center text-center backdrop-blur-xl shadow-2xl
+              ${dragActive ? 'border-accent bg-accent/10' : 'border-border/50 hover:border-foreground/30 bg-background/60'}
               ${uploadState !== 'idle' && uploadState !== 'error' ? 'pointer-events-none opacity-50' : ''}
             `}
           >
@@ -176,13 +194,14 @@ export default function UploadSection() {
                   <div className="flex gap-3">
                     <button 
                       onClick={(e) => { e.stopPropagation(); reset(); }}
-                      className="px-4 py-2 rounded-lg border border-border hover:bg-foreground/5 transition-colors text-sm font-medium"
+                      className="px-5 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors text-sm font-medium backdrop-blur-md"
                     >
                       {t.cancel}
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleUpload(); }}
-                      className="px-5 py-2 rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors text-sm font-medium"
+                      className="px-6 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent/90 transition-all text-sm"
+                      style={{ boxShadow: '0 4px 14px 0 rgba(232,114,74,0.39)' }}
                     >
                       {t.begin}
                     </button>
@@ -211,7 +230,7 @@ export default function UploadSection() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <CheckCircle size={16} className="text-green-500" />
               {t.complete}

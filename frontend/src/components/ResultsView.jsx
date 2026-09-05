@@ -175,7 +175,7 @@ export default function ResultsView({ data, onDataChange }) {
   };
 
   return (
-    <div className="micro-ui-card p-6 mt-8 relative">
+    <div className="bg-background/60 backdrop-blur-xl border border-border/50 shadow-2xl rounded-[2rem] p-6 mt-8 relative z-10">
       {/* Top Action Bar */}
       <div className="flex justify-end mb-4 gap-2">
         <button
@@ -197,7 +197,7 @@ export default function ResultsView({ data, onDataChange }) {
       {/* Header Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         
-        <div className="bg-background/50 rounded-lg p-5 border border-border lg:col-span-2 flex flex-col justify-between">
+        <div className="bg-background/40 backdrop-blur-md rounded-2xl p-5 border border-border/50 lg:col-span-2 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2 text-foreground/60">
               <Building2 size={14} />
@@ -229,7 +229,7 @@ export default function ResultsView({ data, onDataChange }) {
         </div>
 
         <div className="flex flex-col gap-4 lg:col-span-1">
-          <div className="bg-background/50 rounded-lg p-5 border border-border flex-1">
+          <div className="bg-background/40 backdrop-blur-md rounded-2xl p-5 border border-border/50 flex-1">
             <div className="flex items-center gap-2 mb-2 text-foreground/60">
               <FileText size={14} />
               <span className="font-mono text-xs font-semibold uppercase">{t.invoice_num}</span>
@@ -239,7 +239,7 @@ export default function ResultsView({ data, onDataChange }) {
             </p>
           </div>
           
-          <div className="bg-background/50 rounded-lg p-5 border border-border flex-1">
+          <div className="bg-background/40 backdrop-blur-md rounded-2xl p-5 border border-border/50 flex-1">
             <div className="flex items-center gap-2 mb-2 text-foreground/60">
               <Calendar size={14} />
               <span className="font-mono text-xs font-semibold uppercase">{t.date}</span>
@@ -256,7 +256,7 @@ export default function ResultsView({ data, onDataChange }) {
           </div>
         </div>
 
-        <div className="bg-accent/10 rounded-lg p-5 border border-accent/20 lg:col-span-1 flex flex-col justify-between">
+        <div className="bg-accent/10 backdrop-blur-md rounded-2xl p-5 border border-accent/20 lg:col-span-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2 text-accent">
               <DollarSign size={14} />
@@ -289,7 +289,7 @@ export default function ResultsView({ data, onDataChange }) {
         </div>
         
         {data.line_items && data.line_items.length > 0 ? (
-          <div className="overflow-hidden rounded-lg border border-border bg-background/50">
+          <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/40 backdrop-blur-md">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border bg-card">
@@ -312,7 +312,7 @@ export default function ResultsView({ data, onDataChange }) {
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center bg-background/50 rounded-lg border border-dashed border-border">
+          <div className="p-8 text-center bg-background/40 backdrop-blur-md rounded-2xl border border-dashed border-border/50">
             <p className="text-foreground/60 font-sans text-sm">{t.no_line_items}</p>
           </div>
         )}
@@ -327,7 +327,7 @@ export default function ResultsView({ data, onDataChange }) {
             </span>
             {t.raw}
           </summary>
-          <div className="mt-4 bg-background rounded-lg p-5 border border-border">
+          <div className="mt-4 bg-background/40 backdrop-blur-md rounded-2xl p-5 border border-border/50">
             {!isEditingRaw ? (
               <div className="relative group/edit">
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/edit:opacity-100 transition-opacity">

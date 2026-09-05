@@ -6,7 +6,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False)
+    firebase_uid = Column(String, unique=True, index=True, nullable=True)
+    password_hash = Column(String, nullable=True)
     role = Column(String, default="user", nullable=False)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

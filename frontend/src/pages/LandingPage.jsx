@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import '../styles/landing.css';
 
 /* ─────────────────────────────────────
@@ -47,8 +49,8 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   // ── UI state ──
-  const [theme, setTheme]             = useState('dark');
-  const [lang, setLang]               = useState('en');
+  const { language: lang, toggleLanguage } = useLanguage();
+  const { theme, toggleTheme }             = useTheme();
   const [scrolled, setScrolled]       = useState(false);
   const [progress, setProgress]       = useState(0);
   const [activeFaq, setActiveFaq]     = useState(null);
@@ -64,16 +66,6 @@ export default function LandingPage() {
 
   // ── Translation helper ──
   const t = useCallback((en, fr) => lang === 'en' ? en : fr, [lang]);
-
-  /* ── Theme: set data-theme on <html> ── */
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
-    return () => document.documentElement.removeAttribute('data-theme');
-  }, [theme]);
 
   /* ── Scroll: navbar + progress bar ── */
   useEffect(() => {
@@ -256,21 +248,27 @@ export default function LandingPage() {
           <div className="l-nav-actions">
             {/* Language toggle */}
             <button className="l-theme-toggle" style={{ fontWeight: 700, fontSize: '14px' }}
-              onClick={() => setLang((l) => l === 'en' ? 'fr' : 'en')}
+              onClick={toggleLanguage}
               aria-label="Toggle language"
             >
               {lang === 'en' ? 'FR' : 'EN'}
             </button>
 
             {/* Theme toggle */}
-            <button className="l-theme-toggle" onClick={() => setTheme((t) => t === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-              </svg>
+            <button className="l-theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === 'dark' ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              )}
             </button>
 
-            <a href="/app"  className="l-nav-signin"    onClick={(e) => { e.preventDefault(); navigate('/app');  }}>{t('Sign In',     'Connexion')}</a>
-            <a href="/app" className="l-nav-cta l-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>{t('Get Started', 'Démarrer')}</a>
+            <a href="/login"  className="l-nav-signin"    onClick={(e) => { e.preventDefault(); navigate('/login');  }}>{t('Sign In',     'Connexion')}</a>
+            <a href="/signup" className="l-nav-cta l-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>{t('Get Started', 'Démarrer')}</a>
           </div>
         </div>
       </nav>
@@ -289,7 +287,7 @@ export default function LandingPage() {
             )}
           </p>
           <div className="l-hero-ctas">
-            <a href="/app" className="l-btn l-btn-primary" onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
+            <a href="/signup" className="l-btn l-btn-primary" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
               {t('Start for free', 'Commencer gratuitement')}
             </a>
             <a href="#features" className="l-btn l-btn-outline" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>
@@ -633,7 +631,7 @@ export default function LandingPage() {
         <div className="l-container">
           <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>{t('Stop re-typing invoices.', 'Arrêtez de retaper vos factures.')}</h2>
           <p style={{ fontSize: '1.25rem', marginBottom: '2.5rem' }}>{t('Join thousands of finance teams who let AI do the reading.', 'Rejoignez des milliers d\'équipes financières qui laissent l\'IA faire la lecture.')}</p>
-          <a href="/app" className="l-btn l-btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
+          <a href="/signup" className="l-btn l-btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
             {t('Try Factura free', 'Essayer Factura gratuitement')}
           </a>
         </div>
