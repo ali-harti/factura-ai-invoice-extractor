@@ -9,7 +9,7 @@ import UploadSection from './components/UploadSection';
 const LandingPage  = lazy(() => import('./pages/LandingPage'));
 
 /* Public routes that render their own navbar — hide the app Navbar there */
-const PUBLIC_ROUTES = ['/landing'];
+const PUBLIC_ROUTES = ['/'];
 
 function UploadPage() {
   return (
@@ -21,7 +21,7 @@ function UploadPage() {
 
 function AppShell() {
   const location   = useLocation();
-  const isPublic   = PUBLIC_ROUTES.some((r) => location.pathname.startsWith(r));
+  const isPublic   = PUBLIC_ROUTES.includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-white relative">
@@ -31,13 +31,13 @@ function AppShell() {
       <Suspense fallback={<div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E8724A' }}>Loading…</div>}>
         <Routes>
           {/* ── Marketing ── */}
-          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />} />
 
           {/* ── App ── */}
-          <Route path="/"            element={<UploadPage />} />
+          <Route path="/app" element={<UploadPage />} />
 
           {/* ── Catch-all ── */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
       </Suspense>
     </div>

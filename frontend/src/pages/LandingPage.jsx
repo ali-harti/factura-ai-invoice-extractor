@@ -269,8 +269,8 @@ export default function LandingPage() {
               </svg>
             </button>
 
-            <a href="/login"  className="l-nav-signin"    onClick={(e) => { e.preventDefault(); navigate('/login');  }}>{t('Sign In',     'Connexion')}</a>
-            <a href="/signup" className="l-nav-cta l-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>{t('Get Started', 'Démarrer')}</a>
+            <a href="/app"  className="l-nav-signin"    onClick={(e) => { e.preventDefault(); navigate('/app');  }}>{t('Sign In',     'Connexion')}</a>
+            <a href="/app" className="l-nav-cta l-btn-primary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>{t('Get Started', 'Démarrer')}</a>
           </div>
         </div>
       </nav>
@@ -289,7 +289,7 @@ export default function LandingPage() {
             )}
           </p>
           <div className="l-hero-ctas">
-            <a href="/signup" className="l-btn l-btn-primary" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
+            <a href="/app" className="l-btn l-btn-primary" onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
               {t('Start for free', 'Commencer gratuitement')}
             </a>
             <a href="#features" className="l-btn l-btn-outline" onClick={(e) => { e.preventDefault(); scrollTo('features'); }}>
@@ -550,7 +550,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a href="/signup" className="l-btn l-btn-outline" style={{ width: '100%' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
+              <a href="/app" className="l-btn l-btn-outline" style={{ width: '100%' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
                 {t('Start for free', 'Commencer gratuitement')}
               </a>
             </div>
@@ -573,7 +573,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a href="/signup" className="l-btn l-btn-primary" style={{ width: '100%' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
+              <a href="/app" className="l-btn l-btn-primary" style={{ width: '100%' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
                 {t('Start 14-day trial', 'Commencer l\'essai de 14j')}
               </a>
             </div>
@@ -633,7 +633,7 @@ export default function LandingPage() {
         <div className="l-container">
           <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>{t('Stop re-typing invoices.', 'Arrêtez de retaper vos factures.')}</h2>
           <p style={{ fontSize: '1.25rem', marginBottom: '2.5rem' }}>{t('Join thousands of finance teams who let AI do the reading.', 'Rejoignez des milliers d\'équipes financières qui laissent l\'IA faire la lecture.')}</p>
-          <a href="/signup" className="l-btn l-btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
+          <a href="/app" className="l-btn l-btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }} onClick={(e) => { e.preventDefault(); navigate('/app'); }}>
             {t('Try Factura free', 'Essayer Factura gratuitement')}
           </a>
         </div>
