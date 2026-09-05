@@ -18,41 +18,48 @@ export default function HistoryPage() {
   const [detailsError, setDetailsError] = useState(null);
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        let token = '';
-        if (currentUser) {
-          token = await currentUser.getIdToken();
-        }
-        
-        const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/', {
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          }
-        });
-        
-        if (!res.ok) {
-          try {
-            const errData = await res.json();
-            throw new Error(errData.detail || 'Failed to fetch history');
-          } catch(e) {
-            if (e.message !== 'Failed to fetch history' && !e.message.includes('Unexpected')) throw e;
-            throw new Error(`Failed to fetch history (Status: ${res.status})`);
-          }
-        }
-        
-        const data = await res.json();
-        setInvoices(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchHistory();
   }, [currentUser]);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let token = '';
+      if (currentUser) {
+        token = await currentUser.getIdToken();
+      }
+
+      const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/', {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+
+      if (!res.ok) {
+        try {
+          const errData = await res.json();
+          throw new Error(errData.detail || 'Failed to fetch history');
+        } catch(e) {
+          if (e.message !== 'Failed to fetch history' && !e.message.includes('Unexpected')) throw e;
+          throw new Error(`Failed to fetch history (Status: ${res.status})`);
+        }
+      }
+
+      const data = await res.json();
+      setInvoices(data);
+    } catch (err) {
+      console.error(err);
+      const isNetwork = err instanceof TypeError && err.message === 'Failed to fetch';
+      setError(
+        isNetwork
+          ? (language === 'en' ? 'Cannot reach the server. Make sure the backend is running.' : 'Impossible de joindre le serveur. Vérifiez que le serveur est actif.')
+          : err.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSeeDetails = async (inv) => {
     setSelectedInvoice(inv);
@@ -90,12 +97,14 @@ export default function HistoryPage() {
     noData: language === 'en' ? 'No invoices found.' : 'Aucune facture trouvée.',
     loading: language === 'en' ? 'Loading...' : 'Chargement...',
     error: language === 'en' ? 'Error' : 'Erreur',
+    retry: language === 'en' ? 'Retry' : 'Réessayer',
     filename: language === 'en' ? 'Filename' : 'Nom du fichier',
     status: language === 'en' ? 'Status' : 'Statut',
     date: language === 'en' ? 'Date' : 'Date',
     size: language === 'en' ? 'Size' : 'Taille',
     actions: language === 'en' ? 'Actions' : 'Actions',
-    see_details: language === 'en' ? 'See Details' : 'Voir les détails'
+    see_details: language === 'en' ? 'See Details' : 'Voir les détails',
+    no_details: language === 'en' ? 'No details available for this invoice.' : 'Aucun détail disponible pour cette facture.',
   };
 
   const formatDate = (dateString) => {
@@ -126,9 +135,19 @@ export default function HistoryPage() {
             <p className="text-sm font-medium text-foreground/70">{t.loading}</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-red-500">
-            <AlertCircle className="w-8 h-8 mb-4" />
-            <p className="text-sm font-medium">{t.error}: {error}</p>
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-red-500 gap-4">
+            <AlertCircle className="w-10 h-10 mb-1 opacity-80" />
+            <p className="text-sm font-medium text-center max-w-sm">{t.error}: {error}</p>
+            <button
+              onClick={fetchHistory}
+              className="px-4 py-2 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors text-xs font-semibold inline-flex items-center gap-1.5"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+              {t.retry}
+            </button>
           </div>
         ) : invoices.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-foreground/50">
@@ -220,18 +239,28 @@ export default function HistoryPage() {
                     <p className="text-sm font-medium text-foreground/70">{t.loading}</p>
                   </div>
                ) : detailsError ? (
-                  <div className="flex flex-col items-center justify-center py-20 bg-background/60 backdrop-blur-xl border border-border/50 shadow-2xl rounded-[2rem] text-red-500">
-                    <AlertCircle className="w-8 h-8 mb-4" />
-                    <p className="text-sm font-medium">{t.error}: {detailsError}</p>
-                  </div>
+                   <div className="flex flex-col items-center justify-center py-20 bg-background/60 backdrop-blur-xl border border-border/50 shadow-2xl rounded-[2rem] text-red-500 gap-4">
+                     <AlertCircle className="w-10 h-10 opacity-80" />
+                     <p className="text-sm font-medium text-center max-w-sm">{t.error}: {detailsError}</p>
+                     <button
+                       onClick={() => handleSeeDetails(selectedInvoice)}
+                       className="px-4 py-2 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors text-xs font-semibold inline-flex items-center gap-1.5"
+                     >
+                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                         <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                         <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                       </svg>
+                       {t.retry}
+                     </button>
+                   </div>
                ) : invoiceDetails ? (
                   <div className="-mt-8">
                     <ResultsView data={invoiceDetails} onDataChange={(newData) => setInvoiceDetails(newData)} />
                   </div>
                ) : (
-                  <div className="flex flex-col items-center justify-center py-20 bg-background/60 backdrop-blur-xl border border-border/50 shadow-2xl rounded-[2rem] text-foreground/50">
-                    <p className="text-sm font-medium">No details available.</p>
-                  </div>
+                   <div className="flex flex-col items-center justify-center py-20 bg-background/60 backdrop-blur-xl border border-border/50 shadow-2xl rounded-[2rem] text-foreground/50">
+                     <p className="text-sm font-medium">{t.no_details}</p>
+                   </div>
                )}
              </div>
           </div>

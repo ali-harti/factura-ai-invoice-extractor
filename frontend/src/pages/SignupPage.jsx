@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { getAuthErrorMessage } from '../utils/firebaseErrors';
 import '../styles/auth.css';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const { loginWithGoogle } = useAuth();
+  const { signupWithEmail, loginWithGoogle } = useAuth();
   const t = useCallback((en, fr) => language === 'en' ? en : fr, [language]);
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,8 +19,8 @@ const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [strength, setStrength] = useState(0);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Evaluate password strength
   useEffect(() => {
     let s = 0;
     if (password.length > 5) s++;
@@ -29,22 +30,42 @@ const SignupPage = () => {
     setStrength(password ? s : 0);
   }, [password]);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError(t('Passwords do not match', 'Les mots de passe ne correspondent pas'));
+    if (isLoading) return;
+    setError('');
+
+    if (password.length < 6) {
+      setError(t('Password must be at least 6 characters.', 'Le mot de passe doit contenir au moins 6 caract\u00e8res.'));
       return;
     }
-    navigate('/app');
+    if (password !== confirmPassword) {
+      setError(t('Passwords do not match.', 'Les mots de passe ne correspondent pas.'));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signupWithEmail(email, password);
+      navigate('/app');
+    } catch (err) {
+      setError(getAuthErrorMessage(err, language));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const triggerGoogleAuth = async () => {
+    if (isLoading) return;
+    setError('');
+    setIsLoading(true);
     try {
       await loginWithGoogle();
       navigate('/app');
     } catch (err) {
-      setError(t('Failed to sign up with Google.', 'Échec de l\'inscription avec Google.'));
-      console.error(err);
+      setError(getAuthErrorMessage(err, language));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,13 +78,21 @@ const SignupPage = () => {
             <span>Factura</span>
           </Link>
         </div>
-        
+
         <div id="signup-container">
-          <h2 className="auth-title">{t('Create your account', 'Créez votre compte')}</h2>
-          <p className="auth-subtitle">{t('Start extracting invoices in minutes', 'Commencez à extraire des factures en quelques minutes')}</p>
-          {error && <div className="auth-banner">{error}</div>}
-          
-          <button type="button" className="google-btn" onClick={triggerGoogleAuth}>
+          <h2 className="auth-title">{t('Create your account', 'Cr\u00e9ez votre compte')}</h2>
+          <p className="auth-subtitle">{t('Start extracting invoices in minutes', 'Commencez \u00e0 extraire des factures en quelques minutes')}</p>
+
+          {error && (
+            <div className="auth-banner auth-banner--error" role="alert">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <button type="button" className="google-btn" onClick={triggerGoogleAuth} disabled={isLoading}>
             <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -72,45 +101,51 @@ const SignupPage = () => {
             </svg>
             <span>{t('Continue with Google', 'Continuer avec Google')}</span>
           </button>
-          
+
           <div className="auth-divider">
             <span>{t('or', 'ou')}</span>
           </div>
-          
+
           <form id="signup-form" onSubmit={handleSignup}>
             <div className="auth-field">
               <label>{t('Full name', 'Nom complet')}</label>
-              <input 
-                type="text" 
-                required 
+              <input
+                type="text"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={isLoading}
+                autoComplete="name"
               />
             </div>
-            
+
             <div className="auth-field">
               <label>{t('Email', 'E-mail')}</label>
-              <input 
-                type="email" 
-                required 
+              <input
+                type="email"
+                required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                disabled={isLoading}
+                autoComplete="email"
               />
             </div>
-            
+
             <div className="auth-field">
               <label>{t('Password', 'Mot de passe')}</label>
               <div className="password-wrap">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  required 
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   style={{ paddingRight: '40px' }}
+                  disabled={isLoading}
+                  autoComplete="new-password"
                 />
-                <button 
-                  type="button" 
-                  className="pwd-toggle" 
+                <button
+                  type="button"
+                  className="pwd-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={t('Toggle password visibility', 'Afficher/masquer le mot de passe')}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -134,38 +169,51 @@ const SignupPage = () => {
                 <div className={`pwd-seg ${strength >= 3 ? 's-3' : ''}`}></div>
                 <div className={`pwd-seg ${strength >= 4 ? 's-4' : ''}`}></div>
               </div>
+              {password.length > 0 && password.length < 6 && (
+                <p className="inline-err">{t('At least 6 characters required.', '6 caract\u00e8res minimum requis.')}</p>
+              )}
             </div>
-            
+
             <div className="auth-field">
               <label>{t('Confirm password', 'Confirmer le mot de passe')}</label>
-              <input 
-                type="password" 
-                required 
+              <input
+                type="password"
+                required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+                disabled={isLoading}
+                autoComplete="new-password"
+                style={{ borderColor: confirmPassword && confirmPassword !== password ? 'rgba(239,68,68,0.6)' : '' }}
               />
-              {error && <div className="inline-err">{error}</div>}
+              {confirmPassword && confirmPassword !== password && (
+                <p className="inline-err">{t('Passwords do not match.', 'Les mots de passe ne correspondent pas.')}</p>
+              )}
             </div>
-            
+
             <div className="auth-terms">
               <label>
                 <input type="checkbox" required />
                 <span>
-                  {t('I agree to the ', 'J\'accepte les ')} 
-                  <Link to="#">{t('Terms of Service', 'Conditions d\'utilisation')}</Link> 
-                  {t(' and ', ' et la ')} 
-                  <Link to="#">{t('Privacy Policy', 'Politique de confidentialité')}</Link>
+                  {t('I agree to the ', "J'accepte les ")}
+                  <Link to="#">{t('Terms of Service', "Conditions d'utilisation")}</Link>
+                  {t(' and ', ' et la ')}
+                  <Link to="#">{t('Privacy Policy', 'Politique de confidentialit\u00e9')}</Link>
                 </span>
               </label>
             </div>
-            
-            <button type="submit" className="btn btn-primary auth-submit" style={{ fontSize: '1.1rem', letterSpacing: '0.02em', marginTop: '0.5rem', boxShadow: '0 4px 14px 0 rgba(232,114,74,0.39)' }}>
-              {t('Create account', 'Créer un compte')}
+
+            <button type="submit" className="btn btn-primary auth-submit" disabled={isLoading} style={{ fontSize: '1.1rem', letterSpacing: '0.02em', marginTop: '0.5rem', boxShadow: '0 4px 14px 0 rgba(232,114,74,0.39)' }}>
+              {isLoading ? (
+                <span className="btn-spinner-wrap">
+                  <span className="btn-spinner" />
+                  {t('Creating account\u2026', 'Cr\u00e9ation\u2026')}
+                </span>
+              ) : t('Create account', 'Cr\u00e9er un compte')}
             </button>
           </form>
-          
+
           <p className="auth-bottom">
-            {t('Already have an account?', 'Vous avez déjà un compte ?')} <Link to="/login">{t('Sign in', 'Se connecter')}</Link>
+            {t('Already have an account?', 'Vous avez d\u00e9j\u00e0 un compte ?')} <Link to="/login">{t('Sign in', 'Se connecter')}</Link>
           </p>
         </div>
       </div>

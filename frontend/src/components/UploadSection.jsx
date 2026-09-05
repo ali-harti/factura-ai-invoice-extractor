@@ -19,6 +19,9 @@ export default function UploadSection() {
   // Poll status when processing
   useEffect(() => {
     let pollInterval;
+    let failureCount = 0;
+    const MAX_FAILURES = 3;
+
     if (uploadState === 'processing' && invoiceId) {
       pollInterval = setInterval(async () => {
         try {
@@ -31,25 +34,40 @@ export default function UploadSection() {
               ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             }
           });
-          if (!res.ok) throw new Error("Failed to check status");
+          if (!res.ok) throw new Error(`Status check failed (${res.status})`);
           const data = await res.json();
-          
+          failureCount = 0; // reset on success
+
           if (data.status === 'completed') {
             setUploadState('complete');
             setExtractedData(data.extracted_data);
             clearInterval(pollInterval);
           } else if (data.status === 'failed') {
             setUploadState('error');
-            setErrorMsg(data.error_message || "Extraction failed.");
+            setErrorMsg(
+              language === 'en'
+                ? (data.error_message || 'AI extraction failed. Please try again.')
+                : (data.error_message || "L'extraction IA a échoué. Veuillez réessayer.")
+            );
             clearInterval(pollInterval);
           }
         } catch (err) {
-          console.error(err);
+          failureCount++;
+          console.error('Poll error:', err);
+          if (failureCount >= MAX_FAILURES) {
+            clearInterval(pollInterval);
+            setUploadState('error');
+            setErrorMsg(
+              language === 'en'
+                ? 'Lost connection to server. Please check the backend is running.'
+                : 'Connexion au serveur perdue. Vérifiez que le serveur est actif.'
+            );
+          }
         }
       }, 3000);
     }
     return () => clearInterval(pollInterval);
-  }, [uploadState, invoiceId]);
+  }, [uploadState, invoiceId, language]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -93,8 +111,9 @@ export default function UploadSection() {
 
   const handleUpload = async () => {
     if (!file) return;
-    
+
     setUploadState('uploading');
+    setErrorMsg('');
     const formData = new FormData();
     formData.append('file', file);
 
@@ -103,7 +122,7 @@ export default function UploadSection() {
       if (currentUser) {
         token = await currentUser.getIdToken();
       }
-      
+
       const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/upload', {
         method: 'POST',
         headers: {
@@ -111,18 +130,32 @@ export default function UploadSection() {
         },
         body: formData,
       });
-      
+
       if (!res.ok) {
-        throw new Error('Upload failed');
+        // Try to extract a backend detail message
+        let detail = language === 'en' ? 'Upload failed.' : 'Le téléchargement a échoué.';
+        try {
+          const errData = await res.json();
+          if (errData?.detail) detail = errData.detail;
+        } catch (_) { /* response was not JSON */ }
+        throw new Error(detail);
       }
-      
+
       const data = await res.json();
       setInvoiceId(data.id);
       setUploadState('processing');
     } catch (err) {
       console.error(err);
       setUploadState('error');
-      setErrorMsg('Network error during upload. Ensure backend is running.');
+      // If we already have a user-friendly message use it, otherwise check for network failure
+      const isNetwork = err instanceof TypeError && err.message === 'Failed to fetch';
+      setErrorMsg(
+        isNetwork
+          ? (language === 'en'
+              ? 'Cannot reach the server. Make sure the backend is running.'
+              : 'Impossible de joindre le serveur. Vérifiez que le serveur est actif.')
+          : err.message
+      );
     }
   };
 
