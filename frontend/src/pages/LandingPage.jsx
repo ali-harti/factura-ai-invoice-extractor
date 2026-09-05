@@ -375,14 +375,14 @@ export default function LandingPage() {
               <p>{t('Drag & drop, email forwarding, or API. We accept PDF, JPG, PNG, and multi-page documents up to 20MB. Factura normalizes the input instantly.', 'Glisser-déposer, email, ou API. PDF, JPG, PNG jusqu\'à 20Mo acceptés. Factura normalise tout instantanément.')}</p>
             </div>
             <div className="l-feature-visual">
-              <div style={{ textAlign: 'center', border: '2px dashed var(--border)', padding: '3rem', borderRadius: '1rem', width: '80%', background: 'var(--bg)' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ marginBottom: '1rem' }}>
+              <div className="l-upload-box">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" className="l-upload-icon">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                <p style={{ color: 'var(--text)', fontWeight: 500 }}>{t('Drag and drop invoice', 'Glissez-déposez la facture')}</p>
-                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>PDF, PNG, JPG (max 20MB)</p>
+                <p className="l-upload-title">{t('Drag and drop invoice', 'Glissez-déposez la facture')}</p>
+                <p className="l-upload-subtitle">PDF, PNG, JPG (max 20MB)</p>
               </div>
             </div>
           </div>
