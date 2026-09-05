@@ -103,16 +103,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost/api
-        VITE_API_URL: http://localhost/api
+        NEXT_PUBLIC_API_URL: /api
+        VITE_API_URL: /api
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
         VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: factura_frontend
     restart: unless-stopped
     command: npm start
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost/api
-      VITE_API_URL: http://localhost/api
+      NEXT_PUBLIC_API_URL: /api
+      VITE_API_URL: /api
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     depends_on:
@@ -134,7 +134,7 @@ services:
     container_name: factura_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "5174:80"
       - "443:443"
     depends_on:
       frontend:

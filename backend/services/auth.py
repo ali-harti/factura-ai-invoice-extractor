@@ -105,55 +105,22 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
-    FastAPI dependency to extract and authenticate current user from
-    either Authorization Bearer header or httpOnly access_token cookie.
+    FastAPI dependency to extract and authenticate current user.
+    (Bypassed: Returns a default user)
     """
-    token = None
-    if auth_header and auth_header.credentials:
-        token = auth_header.credentials
-    else:
-        token = request.cookies.get("access_token")
-
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Non authentifié",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    payload = verify_token(token)
-    user_id_str = payload.get("sub")
-    if not user_id_str:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identifiant utilisateur manquant dans le token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    try:
-        user_uuid = uuid.UUID(user_id_str)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Format UUID invalide dans le token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    stmt = select(User).where(User.id == user_uuid)
+    stmt = select(User).where(User.email == "default@factura.local")
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Utilisateur introuvable",
-            headers={"WWW-Authenticate": "Bearer"},
+        user = User(
+            email="default@factura.local",
+            full_name="Default User",
+            role=UserRole.admin,
+            is_active=True
         )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Compte inactif",
-        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
 
     return user

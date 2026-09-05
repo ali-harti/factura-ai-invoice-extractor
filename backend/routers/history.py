@@ -19,7 +19,7 @@ except (ImportError, ValueError):
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 async def get_history(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
