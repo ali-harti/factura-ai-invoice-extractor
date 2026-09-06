@@ -73,12 +73,14 @@ export default function DashboardLayout({ children }) {
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', init); };
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    setDropdownOpen(false);
     try {
       await logout();
       navigate('/login');
     } catch (err) {
-      console.error(err);
+      console.error("Logout error:", err);
     }
   };
 
