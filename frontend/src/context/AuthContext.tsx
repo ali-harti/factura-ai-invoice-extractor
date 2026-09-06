@@ -17,6 +17,8 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         try {
           // Trigger backend user creation/sync
           const token = await user.getIdToken();
-          await fetch('http://127.0.0.1:8000/api/v1/invoices/', {
+          await fetch(`${API_URL}/api/v1/invoices/`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

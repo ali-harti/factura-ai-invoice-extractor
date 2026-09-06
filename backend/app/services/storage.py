@@ -6,6 +6,9 @@ from datetime import datetime, timezone
 from fastapi import UploadFile
 
 
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/tmp/factura-uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 class LocalStorageService:
     """
     A service for handling local file storage operations.
@@ -14,7 +17,7 @@ class LocalStorageService:
     directory hierarchy based on the current year and month.
     """
 
-    def __init__(self, base_dir: str = "uploads"):
+    def __init__(self, base_dir: str = UPLOAD_DIR):
         self.base_dir = base_dir
 
     def save_upload_file(self, upload_file: UploadFile) -> str:

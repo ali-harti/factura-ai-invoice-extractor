@@ -17,6 +17,8 @@ export default function HistoryPage() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -26,7 +28,7 @@ export default function HistoryPage() {
         token = await currentUser.getIdToken();
       }
 
-      const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/', {
+      const res = await fetch(`${API_URL}/api/v1/invoices/`, {
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
@@ -76,7 +78,7 @@ export default function HistoryPage() {
         if (currentUser) {
           token = await currentUser.getIdToken();
         }
-        const res = await fetch(`http://127.0.0.1:8000/api/v1/invoices/status/${inv.id}`, {
+        const res = await fetch(`${API_URL}/api/v1/invoices/status/${inv.id}`, {
           headers: {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           }

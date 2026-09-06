@@ -4,6 +4,8 @@ import ResultsView from "../invoice/ResultsView";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAuth } from "../../context/AuthContext";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 export default function UploadSection() {
   const sectionRef = useRef(null);
   const { language } = useLanguage();
@@ -29,7 +31,7 @@ export default function UploadSection() {
           if (currentUser) {
             token = await currentUser.getIdToken();
           }
-          const res = await fetch(`http://127.0.0.1:8000/api/v1/invoices/status/${invoiceId}`, {
+          const res = await fetch(`${API_URL}/api/v1/invoices/status/${invoiceId}`, {
             headers: {
               ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             }
@@ -123,7 +125,7 @@ export default function UploadSection() {
         token = await currentUser.getIdToken();
       }
 
-      const res = await fetch('http://127.0.0.1:8000/api/v1/invoices/upload', {
+      const res = await fetch(`${API_URL}/api/v1/invoices/upload`, {
         method: 'POST',
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})

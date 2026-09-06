@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: factura-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 60
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MODEL_NAME
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+    healthCheckPath: /health

@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -40,9 +41,15 @@ app = FastAPI(
 )
 
 # Configure CORS
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        FRONTEND_URL, # Vercel production URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
