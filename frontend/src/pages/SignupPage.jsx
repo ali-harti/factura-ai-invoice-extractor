@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,7 +9,7 @@ import '../styles/auth.css';
 const SignupPage = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const { signupWithEmail, loginWithGoogle } = useAuth();
+  const { signupWithEmail, signupWithGoogle } = useAuth();
   const t = useCallback((en, fr) => language === 'en' ? en : fr, [language]);
 
   const [name, setName] = useState('');
@@ -60,7 +60,7 @@ const SignupPage = () => {
     setError('');
     setIsLoading(true);
     try {
-      await loginWithGoogle();
+      await signupWithGoogle();
       navigate('/app');
     } catch (err) {
       setError(getAuthErrorMessage(err, language));

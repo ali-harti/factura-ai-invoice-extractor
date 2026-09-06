@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  getAdditionalUserInfo
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -19,7 +20,20 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loginWithGoogle = () => {
+  const loginWithGoogle = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+    const additionalInfo = getAdditionalUserInfo(result);
+    if (additionalInfo?.isNewUser) {
+      await result.user.delete();
+      await signOut(auth);
+      const error = new Error('No account found. Please sign up first.');
+      error.code = 'auth/user-not-found';
+      throw error;
+    }
+    return result;
+  };
+
+  const signupWithGoogle = () => {
     return signInWithPopup(auth, googleProvider);
   };
 
@@ -66,6 +80,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     loginWithGoogle,
+    signupWithGoogle,
     loginWithEmail,
     signupWithEmail,
     resetPassword,

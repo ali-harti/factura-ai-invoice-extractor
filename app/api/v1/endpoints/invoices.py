@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 class InvoiceResponse(BaseModel):
-    id: int
+    id: Any
     status: str
     message: str
 
 class InvoiceStatusResponse(BaseModel):
-    id: int
+    id: Any
     status: str
     error_message: Optional[str] = None
     extracted_data: Optional[Any] = None # Or InvoiceExtractionSchema if typed
 
 class InvoiceHistoryResponse(BaseModel):
-    id: int
+    id: Any
     original_filename: str
     file_type: str
     file_size: int
@@ -77,10 +77,17 @@ async def upload_invoice(
     )
 
 @router.get("/status/{invoice_id}", response_model=InvoiceStatusResponse)
-def get_invoice_status(invoice_id: int, db: Session = Depends(get_db)):
+def get_invoice_status(
+    invoice_id: Any, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
+        
+    if invoice.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this invoice")
         
     response = InvoiceStatusResponse(
         id=invoice.id,

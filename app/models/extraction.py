@@ -1,3 +1,5 @@
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func, Float, JSON
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -5,8 +7,8 @@ from .base import Base
 class Extraction(Base):
     __tablename__ = "extractions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     
     raw_model_response = Column(String, nullable=True)
     parsed_data = Column(JSON, nullable=True)
