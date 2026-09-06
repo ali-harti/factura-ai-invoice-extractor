@@ -7,6 +7,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import UploadSection from './components/UploadSection';
 import DashboardLayout from './components/DashboardLayout';
+import GlobalLoader from './components/GlobalLoader';
 
 const LandingPage  = lazy(() => import('./pages/LandingPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -44,7 +45,7 @@ function ProtectedRoute({ children }) {
 function AppShell() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-white relative">
-      <Suspense fallback={<div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E8724A' }}>Loading\u2026</div>}>
+      <Suspense fallback={<GlobalLoader />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />

@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail,
   getAdditionalUserInfo
 } from 'firebase/auth';
+import GlobalLoader from '../components/GlobalLoader';
 
 const AuthContext = createContext();
 
@@ -89,7 +90,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? <GlobalLoader /> : children}
     </AuthContext.Provider>
   );
 };
