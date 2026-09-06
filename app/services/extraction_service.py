@@ -60,30 +60,45 @@ async def _async_run_extraction(db: Session, invoice: Invoice):
         invoice.error_message = f"Database save failed: {str(e)}"
         db.commit()
 
-def run_extraction(db: Session, invoice_id: int):
-    """
-    Synchronous wrapper for Celery to call the extraction logic.
-    """
-    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
-    if not invoice:
-        logger.error(f"Invoice {invoice_id} not found in database.")
-        return
-        
-    if invoice.status != "processing":
-        # Ensure we don't process completed or failed ones unless deliberately retried
-        logger.warning(f"Invoice {invoice_id} is in status '{invoice.status}', not 'processing'.")
+from typing import Any
 
+async def process_invoice_background(invoice_id: Any):
+    """
+    Background task to process the invoice, runs in the asyncio event loop.
+    Replaces the old Celery/Threading implementation.
+    """
+    from app.db.database import SessionLocal
+    db = SessionLocal()
+    
     try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        import threading
-        def _run_in_thread():
-            asyncio.run(_async_run_extraction(db, invoice))
-        t = threading.Thread(target=_run_in_thread)
-        t.start()
-        t.join()
-    else:
-        asyncio.run(_async_run_extraction(db, invoice))
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+        if not invoice:
+            logger.error(f"Invoice {invoice_id} not found in database.")
+            return
+            
+        if invoice.status != "queued" and invoice.status != "processing":
+            logger.warning(f"Invoice {invoice_id} is in status '{invoice.status}'. Skipping.")
+            return
+            
+        invoice.status = "processing"
+        db.commit()
+        
+        # Run the async extraction
+        await _async_run_extraction(db, invoice)
+        
+    except Exception as exc:
+        logger.error(f"Unhandled exception processing invoice {invoice_id}: {exc}")
+        db.rollback()
+        
+        # Ensure we update status properly
+        try:
+            invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+            if invoice:
+                invoice.status = "failed"
+                invoice.error_message = f"Processing failed: {str(exc)}"
+                db.commit()
+        except Exception as inner_exc:
+            logger.error(f"Failed to update invoice status after exception: {inner_exc}")
+            
+    finally:
+        db.close()

@@ -1,9 +1,10 @@
-﻿import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import UploadSection from './components/UploadSection';
 import DashboardLayout from './components/DashboardLayout';
 
@@ -60,14 +61,16 @@ function AppShell() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <AppShell />
-          </ToastProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <AppShell />
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }

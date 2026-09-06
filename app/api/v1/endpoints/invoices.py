@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.invoice import Invoice
 from app.models.user import User
 from app.services.storage import storage_service
 from app.services.file_validation import validate_invoice_file
-from app.worker.tasks import process_invoice
 from pydantic import BaseModel
 from typing import Optional, Any, List
 from app.schemas.invoice import InvoiceExtractionSchema
 from app.api.deps import get_current_user
+from app.services.extraction_service import process_invoice_background
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ class InvoiceHistoryResponse(BaseModel):
 
 @router.post("/upload", response_model=InvoiceResponse)
 async def upload_invoice(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -67,8 +68,8 @@ async def upload_invoice(
     db.commit()
     db.refresh(new_invoice)
 
-    # 4. Trigger Celery Task
-    process_invoice.delay(new_invoice.id)
+    # 4. Trigger Background Task
+    background_tasks.add_task(process_invoice_background, new_invoice.id)
 
     return InvoiceResponse(
         id=new_invoice.id, 
