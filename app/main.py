@@ -21,5 +21,6 @@ app.add_middleware(
 async def health_check():
     return {"status": "healthy", "project": settings.PROJECT_NAME}
 
+
 from app.api.v1.endpoints import invoices
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])

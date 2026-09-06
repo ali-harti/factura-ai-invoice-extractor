@@ -40,8 +40,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      
+      if (user) {
+        try {
+          // Trigger backend user creation/sync
+          const token = await user.getIdToken();
+          await fetch('http://127.0.0.1:8000/api/v1/invoices/', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } catch (err) {
+          console.error('Failed to sync user with backend:', err);
+        }
+      }
+      
       setLoading(false);
     });
 

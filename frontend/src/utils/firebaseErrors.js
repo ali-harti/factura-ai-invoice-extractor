@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Maps Firebase Auth error codes to user-friendly messages.
  * Returns { en, fr } so the caller can pick the right language.
  */
@@ -11,7 +11,7 @@ const ERROR_MAP = {
   'auth/too-many-requests':         { en: 'Too many attempts. Please try again later.', fr: 'Trop de tentatives. Veuillez r\u00e9essayer plus tard.' },
   'auth/email-already-in-use':      { en: 'An account with this email already exists.', fr: 'Un compte avec cet e-mail existe d\u00e9j\u00e0.' },
   'auth/weak-password':             { en: 'Password must be at least 6 characters.', fr: 'Le mot de passe doit contenir au moins 6 caract\u00e8res.' },
-  'auth/operation-not-allowed':     { en: 'Email/password sign-in is not enabled.',  fr: 'La connexion e-mail/mot de passe n'\''est pas activ\u00e9e.' },
+  'auth/operation-not-allowed':     { en: 'Email/password sign-in is not enabled.',  fr: 'La connexion e-mail/mot de passe n\'est pas activ\u00e9e.' },
   'auth/popup-closed-by-user':      { en: 'Sign-in popup was closed. Please try again.', fr: 'La fen\u00eatre de connexion a \u00e9t\u00e9 ferm\u00e9e. R\u00e9essayez.' },
   'auth/popup-blocked':             { en: 'Sign-in popup was blocked by your browser.', fr: 'La fen\u00eatre de connexion a \u00e9t\u00e9 bloqu\u00e9e par votre navigateur.' },
   'auth/cancelled-popup-request':   { en: 'Only one sign-in window can be open at a time.', fr: 'Une seule fen\u00eatre de connexion peut \u00eatre ouverte \u00e0 la fois.' },
@@ -21,7 +21,7 @@ const ERROR_MAP = {
 
 const FALLBACK = {
   en: 'An unexpected error occurred. Please try again.',
-  fr: 'Une erreur inattendue s'\''est produite. Veuillez r\u00e9essayer.',
+  fr: 'Une erreur inattendue s\'est produite. Veuillez r\u00e9essayer.',
 };
 
 /**

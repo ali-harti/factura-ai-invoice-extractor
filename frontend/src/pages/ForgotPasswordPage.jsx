@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { useLanguage } from '../context/LanguageContext';
@@ -34,7 +34,7 @@ const ForgotPasswordPage = () => {
       } else if (err?.code === 'auth/network-request-failed') {
         setError(t('Network error. Please check your connection.', 'Erreur r\u00e9seau. V\u00e9rifiez votre connexion.'));
       } else {
-        setError(t('An error occurred. Please try again.', 'Une erreur s'\''est produite. Veuillez r\u00e9essayer.'));
+        setError(t('An error occurred. Please try again.', 'Une erreur s\'est produite. Veuillez r\u00e9essayer.'));
       }
     } finally {
       setIsLoading(false);
