@@ -1,0 +1,15 @@
+refactor: professional codebase restructure + world-class README
+
+- Reorganized backend into clean api/core/db/services/utils layers
+- Reorganized frontend into components/pages/services/hooks/utils
+- Converted frontend to TypeScript
+- Consolidated CSS files into single index.css
+- Removed all scratch, debug, and temp files
+- Added pagination to history endpoint (performance fix)
+- Fixed sign out race condition
+- Added professional GlobalLoader animation
+- Added MIT LICENSE
+- Added comprehensive README with badges and quick start
+- Added docs/architecture.md and docs/api.md
+- Updated .gitignore
+- All tests passing, build clean
