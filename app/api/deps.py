@@ -43,14 +43,21 @@ def get_current_user(
         
     token = auth_header.split(" ")[1]
     try:
-        try:
-            decoded_token = auth.verify_id_token(token)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).warning(f"Firebase token verification failed ({e}). Falling back to unverified decoding for local dev.")
+        import os
+        if not os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') and not os.environ.get('FIREBASE_CONFIG'):
+            # Skip the 12-second timeout if we know there are no credentials for local dev
             decoded_token = decode_jwt_unverified(token)
             if not decoded_token:
-                raise Exception(f"Invalid token format for unverified decoding. Original error: {e}")
+                raise Exception("Invalid token format for unverified decoding (no credentials found).")
+        else:
+            try:
+                decoded_token = auth.verify_id_token(token)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Firebase token verification failed ({e}). Falling back to unverified decoding for local dev.")
+                decoded_token = decode_jwt_unverified(token)
+                if not decoded_token:
+                    raise Exception(f"Invalid token format for unverified decoding. Original error: {e}")
                 
         uid = decoded_token.get('uid') or decoded_token.get('user_id')
         email = decoded_token.get('email')
