@@ -14,6 +14,10 @@
 
 ---
 
+<div align="center">
+  <img src="./docs/assets/screenshot.png" alt="Factura Dashboard Screen" width="100%" />
+</div>
+
 **Factura** is an advanced, AI-powered invoice data extraction platform. It seamlessly reads invoices in over 50 languages (including RTL, CJK, and Cyrillic scripts), processes various formats (PDF, JPG, PNG), and outputs clean, structured JSON and CSV formats ready for ERP integration. 
 
 Say goodbye to manual data entry and brittle OCR templates. Factura leverages advanced vision-language models (VLMs) to intelligently parse any invoice structure instantly.
